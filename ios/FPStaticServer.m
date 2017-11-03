@@ -1,4 +1,5 @@
 #import "FPStaticServer.h"
+#import "GCDWebServerDataResponse.h"
 
 @implementation FPStaticServer
 
@@ -31,28 +32,27 @@ RCT_EXPORT_MODULE();
 
 
 RCT_EXPORT_METHOD(start: (NSString *)port
-                  root:(NSString *)optroot
+                  html:(NSString *)html
                   localOnly:(BOOL *)localhost_only
                   keepAlive:(BOOL *)keep_alive
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     
-    NSString * root;
-    
-    if( [optroot isEqualToString:@"DocumentDir"] ){
-        root = [NSString stringWithFormat:@"%@", [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] ];
-    } else if( [optroot isEqualToString:@"BundleDir"] ){
-        root = [NSString stringWithFormat:@"%@", [[NSBundle mainBundle] bundlePath] ];
-    } else if([optroot hasPrefix:@"/"]) {
-        root = optroot;
-    } else {
-        root = [NSString stringWithFormat:@"%@/%@", [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0], optroot ];
-    }
-    
-    
-    if(root && [root length] > 0) {
-        self.www_root = root;
-    }
+//    NSString * root;
+//
+//    if( [optroot isEqualToString:@"DocumentDir"] ){
+//        root = [NSString stringWithFormat:@"%@", [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] ];
+//    } else if( [optroot isEqualToString:@"BundleDir"] ){
+//        root = [NSString stringWithFormat:@"%@", [[NSBundle mainBundle] bundlePath] ];
+//    } else if([optroot hasPrefix:@"/"]) {
+//        root = optroot;
+//    } else {
+//        root = [NSString stringWithFormat:@"%@/%@", [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0], optroot ];
+//    }
+//
+//    if(root && [root length] > 0) {
+//        self.www_root = root;
+//    }
 
     if(port && [port length] > 0) {
         NSNumberFormatter *f = [[NSNumberFormatter alloc] init];
@@ -73,7 +73,12 @@ RCT_EXPORT_METHOD(start: (NSString *)port
         return;
     }
     
-    [_webServer addGETHandlerForBasePath:@"/" directoryPath:self.www_root indexFilename:@"index.html" cacheAge:3600 allowRangeRequests:YES];
+//    [_webServer addGETHandlerForBasePath:@"/" directoryPath:self.www_root indexFilename:@"index.html" cacheAge:3600 allowRangeRequests:YES];
+    [_webServer addDefaultHandlerForMethod:@"GET"
+                             requestClass:[GCDWebServerRequest class]
+                             processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+                                 return [GCDWebServerDataResponse responseWithHTML:html];
+                             }];
     
     NSError *error;
     NSMutableDictionary* options = [NSMutableDictionary dictionary];
