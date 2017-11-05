@@ -6,56 +6,13 @@ import {
 
 const { FPStaticServer } = NativeModules;
 
-const PORT = '';
-const LOCALHOST = 'http://127.0.0.1:';
-
 class StaticServer {
-	constructor(port, html, opts) {
-		switch (arguments.length) {
-			case 3:
-				this.port = `${port}` || PORT;
-				this.html = html;
-				this.localOnly = (opts && opts.localOnly) || false;
-				this.keepAlive = (opts && opts.keepAlive) || false;
-				break;
-			case 2:
-				this.port = `${port}`;
-				if (typeof(arguments[1]) === 'string') {
-					this.html = html;
-					this.localOnly = false;
-					this.keepAlive = false;
-				} else {
-					this.html = html;
-					this.localOnly = (arguments[1] && arguments[1].localOnly) || false;
-					this.keepAlive = (arguments[1] && arguments[1].keepAlive) || false;
-				}
-				break;
-			case 1:
-				if (typeof(arguments[0]) === 'number') {
-					this.port = `${port}`;
-					this.html = html;
-					this.localOnly = false;
-					this.keepAlive = false;
-				} else {
-					this.port = PORT;
-					this.html = html;
-					this.localOnly = (arguments[0] && arguments[0].localOnly) || false;
-					this.keepAlive = (arguments[0] && arguments[0].keepAlive) || false;
-				}
-				break;
-			default:
-				this.port = PORT;
-				this.html = html;
-				this.localOnly = false;
-				this.keepAlive = false;
-		}
-
-
+	constructor() {
 		this.started = false;
 	}
 
-	start() {
-		if( this.running ){
+	start(opts) {
+		if (this.running) {
 			return console.warn('StaticServer already running');
 		}
 
@@ -66,11 +23,15 @@ class StaticServer {
 			AppState.addEventListener('change', this._handleAppStateChange.bind(this));
 		}
 
-		return FPStaticServer.start(this.port, this.html, this.localOnly, this.keepAlive);
+		return FPStaticServer.start(opts);
+	}
+
+	setRootHtml(html) {
+		FPStaticServer.setRootHTML(html);
 	}
 
 	stop() {
-		if( !this.running ){
+		if (!this.running) {
 			return console.warn('StaticServer not running');
 		}
 
@@ -81,7 +42,9 @@ class StaticServer {
 
 	kill() {
 		this.stop();
+
 		this.started = false;
+
 		AppState.removeEventListener('change', this._handleAppStateChange.bind(this));
 	}
 
