@@ -92,7 +92,6 @@
 		331239FA1E5369D000559EB0 /* About.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = About.txt; sourceTree = "<group>"; };
 		331239FB1E5369D000559EB0 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
 		331239FC1E5369D000559EB0 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
-		B3E7B5881CC2AC0600A0062D /* FPStaticServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPStaticServer.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* FPStaticServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPStaticServer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -221,7 +220,6 @@
 				3308A2CD1F8320B900A72E25 /* GCDWebServer */,
 				331239F91E5369D000559EB0 /* CocoaAsyncSocket */,
 				331239E01E53697C00559EB0 /* CocoaLumberjack */,
-				B3E7B5881CC2AC0600A0062D /* FPStaticServer.h */,
 				B3E7B5891CC2AC0600A0062D /* FPStaticServer.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);

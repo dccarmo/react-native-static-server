@@ -1,24 +1,34 @@
+#import <React/RCTBridgeModule.h>
 #import <React/RCTConvert.h>
 
-#import "FPStaticServer.h"
 #import "GCDWebServerDataResponse.h"
+#import "GCDWebServer.h"
 
+@interface FPStaticServer : NSObject <RCTBridgeModule>
+
+@property (nonatomic) GCDWebServer* webServer;
+@property (nonatomic) NSString* rootHTML;
+
+@end
 
 @implementation FPStaticServer
 
 RCT_EXPORT_MODULE();
 
 - (instancetype)init {
-    if (self = [super init]) {
+    self = [super init];
+    
+    if (self) {
         _webServer = [GCDWebServer new];
+        _rootHTML = @"";
     }
     
     return self;
 }
 
 - (void)dealloc {
-    if (_webServer.isRunning == YES) {
-        [_webServer stop];
+    if (self.webServer.isRunning == YES) {
+        [self.webServer stop];
     }
 }
 
@@ -43,14 +53,22 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
     [webServerOptions setObject:[RCTConvert NSNumber:options[@"localhostOnly"]] forKey:GCDWebServerOption_BindToLocalhost];
     [webServerOptions setObject:[RCTConvert NSNumber:options[@"keepAlive"]] forKey:GCDWebServerOption_AutomaticallySuspendInBackground];
     
-    if (_webServer.isRunning != NO) {
+    __weak typeof(self) weakSelf = self;
+    
+    [self.webServer addDefaultHandlerForMethod:@"GET"
+                                  requestClass:[GCDWebServerRequest class]
+                                  processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+                                      return [GCDWebServerDataResponse responseWithHTML:weakSelf.rootHTML];
+                                  }];
+    
+    if (self.webServer.isRunning != NO) {
         NSError *error = nil;
         reject(@"server_error", @"StaticServer is already up", error);
         return;
     }
 
-    if ([_webServer startWithOptions:webServerOptions error:&error]) {
-        NSString *url = [NSString stringWithFormat: @"%@://%@:%@", [_webServer.serverURL scheme], [_webServer.serverURL host], [_webServer.serverURL port]];
+    if ([self.webServer startWithOptions:webServerOptions error:&error]) {
+        NSString *url = [NSString stringWithFormat: @"%@://%@:%@", [self.webServer.serverURL scheme], [self.webServer.serverURL host], [self.webServer.serverURL port]];
         
         NSLog(@"Started StaticServer at URL %@", url);
 
@@ -64,18 +82,12 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
 
 RCT_EXPORT_METHOD(setRootHTML:(NSString *)html)
 {
-    [_webServer removeAllHandlers];
-    
-    [_webServer addDefaultHandlerForMethod:@"GET"
-                              requestClass:[GCDWebServerRequest class]
-                              processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-                                  return [GCDWebServerDataResponse responseWithHTML:html];
-                              }];
+    [self setRootHTML:html];
 }
 
 RCT_EXPORT_METHOD(stop) {
-    if(_webServer.isRunning == YES) {
-        [_webServer stop];
+    if(self.webServer.isRunning == YES) {
+        [self.webServer stop];
 
         NSLog(@"StaticServer stopped");
     }
