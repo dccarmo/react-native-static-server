@@ -82,7 +82,7 @@ RCT_EXPORT_METHOD(start:(NSDictionary *)options
 
 RCT_EXPORT_METHOD(setRootHTML:(NSString *)html)
 {
-    [self setRootHTML:html];
+    _rootHTML = html;
 }
 
 RCT_EXPORT_METHOD(stop) {
