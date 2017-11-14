@@ -7,7 +7,7 @@
 @interface FPStaticServer : NSObject <RCTBridgeModule>
 
 @property (nonatomic) GCDWebServer* webServer;
-@property (nonatomic) NSString* rootHTML;
+@property (nonatomic) NSString* html;
 
 @end
 
@@ -20,7 +20,7 @@ RCT_EXPORT_MODULE();
     
     if (self) {
         _webServer = [GCDWebServer new];
-        _rootHTML = @"";
+        _html = @"";
     }
     
     return self;
@@ -40,56 +40,44 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(start:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
+    if (self.webServer.isRunning) {
+        [self.webServer stop];
+        [self.webServer removeAllHandlers];
+    }
+    
     NSError *error;
     NSMutableDictionary* webServerOptions = [NSMutableDictionary dictionary];
     NSNumber *port = [RCTConvert NSNumber:options[@"port"]];
     
-    if (![port isEqualToNumber:[NSNumber numberWithInt:-1]]) {
-        [webServerOptions setObject:port forKey:GCDWebServerOption_Port];
-    } else {
-        [webServerOptions setObject:[NSNumber numberWithInteger:8080] forKey:GCDWebServerOption_Port];
-    }
-
-    [webServerOptions setObject:[RCTConvert NSNumber:options[@"localhostOnly"]] forKey:GCDWebServerOption_BindToLocalhost];
-    [webServerOptions setObject:[RCTConvert NSNumber:options[@"keepAlive"]] forKey:GCDWebServerOption_AutomaticallySuspendInBackground];
+    [webServerOptions setObject:port forKey:GCDWebServerOption_Port];
+    [webServerOptions setObject:@YES forKey:GCDWebServerOption_BindToLocalhost];
     
     __weak typeof(self) weakSelf = self;
     
     [self.webServer addDefaultHandlerForMethod:@"GET"
                                   requestClass:[GCDWebServerRequest class]
                                   processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-                                      return [GCDWebServerDataResponse responseWithHTML:weakSelf.rootHTML];
+                                      return [GCDWebServerDataResponse responseWithHTML:weakSelf.html];
                                   }];
     
-    if (self.webServer.isRunning != NO) {
-        NSError *error = nil;
-        reject(@"server_error", @"StaticServer is already up", error);
+    if (![self.webServer startWithOptions:webServerOptions error:&error]) {
+        reject(@"server_error", @"StaticServer could not start", error);
+        
         return;
     }
-
-    if ([self.webServer startWithOptions:webServerOptions error:&error]) {
-        NSString *url = [NSString stringWithFormat: @"%@://%@:%@", [self.webServer.serverURL scheme], [self.webServer.serverURL host], [self.webServer.serverURL port]];
-        
-        NSLog(@"Started StaticServer at URL %@", url);
-
-        resolve(url);
-    } else {
-        NSLog(@"Error starting StaticServer: %@", error);
-        
-        reject(@"server_error", @"StaticServer could not start", error);
-    }
+    
+    NSString *url = [NSString stringWithFormat: @"%@://%@:%@", [self.webServer.serverURL scheme], [self.webServer.serverURL host], [self.webServer.serverURL port]];
+    
+    resolve(url);
 }
 
-RCT_EXPORT_METHOD(setRootHTML:(NSString *)html)
-{
-    _rootHTML = html;
+RCT_EXPORT_METHOD(setHtml:(NSString *)html) {
+    _html = html;
 }
 
 RCT_EXPORT_METHOD(stop) {
     if(self.webServer.isRunning == YES) {
         [self.webServer stop];
-
-        NSLog(@"StaticServer stopped");
     }
 }
 
